@@ -1,5 +1,6 @@
 package com.hhit.hkapp;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 
@@ -9,6 +10,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -25,6 +27,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import com.hikvision.netsdk.COND_INT_PTR;
 import com.hikvision.netsdk.ExceptionCallBack;
@@ -389,7 +392,7 @@ public class MainActivity extends Activity implements Callback {
                 byte[] picBuf = new byte[nSize];
                 Player.MPInteger stSize = new Player.MPInteger();
                 if (!Player.getInstance()
-                        .getBMP(m_iPort, picBuf, nSize, stSize)) {
+                        .getJPEG(m_iPort, picBuf, nSize, stSize)) {
                     Log.e(TAG, "getBMP failed with error code:"
                             + Player.getInstance().getLastError(m_iPort));
                     return;
@@ -398,8 +401,20 @@ public class MainActivity extends Activity implements Callback {
                 SimpleDateFormat sDateFormat = new SimpleDateFormat(
                         "yyyy-MM-dd-hh:mm:ss");
                 String date = sDateFormat.format(new java.util.Date());
-                FileOutputStream file = new FileOutputStream("/mnt/sdcard/"
-                        + date + ".bmp");
+
+                String status = Environment.getExternalStorageState();
+                if (!status.equals(Environment.MEDIA_MOUNTED)) {
+                    Toast.makeText(getApplicationContext(), "没有SD卡", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                File destDir = new File("/mnt/sdcard/hhit");
+                if (!destDir.exists()) {
+                    destDir.mkdirs();
+                }
+
+                FileOutputStream file = new FileOutputStream("/mnt/sdcard/hhit/"
+                        + date + ".jpg");
                 file.write(picBuf, 0, stSize.value);
                 file.close();
             } catch (Exception err) {
